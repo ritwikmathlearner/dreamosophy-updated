@@ -1,0 +1,54 @@
+version: '3'
+
+networks:
+  dreamosophy:
+    driver: bridge
+
+services:
+  app:
+    build:
+      args:
+        user: ritwik
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: dreamosophy
+    container_name: app-dreamosophy
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./src:/var/www
+      - /var/www/node_modules
+      - /var/www/vendor
+    networks:
+      - dreamosophy
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql-dreamosophy
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "4306:3306"
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: dreamosophy
+      MYSQL_USER: ritwik
+      MYSQL_PASSWORD: Ronnie@1993
+    networks:
+      - dreamosophy
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx-dreamosophy
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes: 
+      - ./src:/var/www/
+      - ./nginx:/etc/nginx/conf.d/
+    networks:
+      - dreamosophy
+

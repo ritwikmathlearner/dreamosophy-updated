@@ -1,0 +1,37 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateFriendRequestsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('friend_requests', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('sent_by');
+            $table->unsignedBigInteger('received_by');
+            $table->enum('status', ['pending', 'accepted', 'rejected']);    
+            $table->timestamps();
+
+            $table->foreign('sent_by')->references('id')->on('users');
+            $table->foreign('received_by')->references('id')->on('users');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('friend_requests');
+    }
+}
