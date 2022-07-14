@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     tty: true
     ports:
-      - "4306:3306"
+      - "3306:3306"
     volumes:
       - ./mysql:/docker-entrypoint-initdb.d
     environment:
@@ -39,6 +39,21 @@ services:
       MYSQL_PASSWORD: Ronnie@1993
     networks:
       - dreamosophy
+ 
+ phpmyadmin:
+    depends_on:
+      - mysql
+    image: phpmyadmin/phpmyadmin
+    container_name: mystack-phpmyadmin
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      MYSQL_DATABASE: dreamosophy
+      MYSQL_ROOT_PASSWORD: secret
+      PMA_HOST: mysql
+    networks:
+      - mystack
 
   nginx:
     image: nginx:stable-alpine
