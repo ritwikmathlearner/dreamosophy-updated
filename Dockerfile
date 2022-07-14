@@ -1,6 +1,6 @@
 FROM php:8.1-fpm-buster
 
-# Arguments defined in docker-compose.yml
+# Arguments
 ARG user
 ARG uid
 
@@ -8,37 +8,54 @@ ARG uid
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    libzip-dev \
+    zip \
+    unzip \
     libpng-dev \
     libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip
+    libxml2-dev
 
-# Clear cache
+# clear server cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Get latest Composer
+# Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Create system user to run Composer and Artisan Commands
+# Create a new user
 RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
+# Install NodeJS 16
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs
 
-COPY ./src /var/www
+# Copy project to Container
+COPY ./ /var/www
 
 # Set working directory
 WORKDIR /var/www
 
+# Create .env file
+# RUN cp .env.example .env
+
+# Install composer packages
 RUN composer install
-RUN php artisan key:generate
+
+# Generate artisan key
+RUN php artisan key:Generate
+
+# Create the symbolic link
+RUN php artisan storage:link
+
+# Install NPM Packages and compile
 RUN npm install
 RUN npm run dev
 
+RUN chown $user -R ./
+
+# Set user
 USER $user
